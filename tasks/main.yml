@@ -12,9 +12,8 @@
 
 - name: "Get Apache version"
   action: shell apachectl -v | grep 'version' | awk -F '/' '{ print $2 }'| awk '{ print $1 }' | cut -c 1-3
-  changed_when: apachectl_version.rc == 7
+  changed_when: False
   register: apachectl_version
-  always_run: yes
   tags:
     - zabbix-server
     - apache
@@ -79,6 +78,7 @@
         group={{ apache_group }}
         state=directory
         mode=0755
+  when: zabbix_web
   tags:
     - zabbix-server
     - init
@@ -90,7 +90,14 @@
             owner={{ apache_user }}
             group={{ apache_group }}
             mode=0644
+  when: zabbix_web
   tags:
     - zabbix-server
     - init
     - config
+
+- name: "Make sure Zabbix Server is running"
+  service: name=zabbix-server
+           state=started
+           enabled=yes
+           use=service
